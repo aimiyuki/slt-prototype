@@ -13,6 +13,9 @@ setup(
             "pylint",
             "ipython",
             "python-dotenv",
+        ],
+        "deploy": [
+            "gunicorn",
         ]
     }
 )
