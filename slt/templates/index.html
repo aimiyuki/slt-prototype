@@ -45,22 +45,24 @@
       </form>
     </div>
 
-    <div class="row">
-      <dl>
-        <dt>元の文章</dt>
-        <dd>
-          {% for word in sentence_info.old_tokens %}
-          <span class="{{ word.status }}">{{ word.token }}</span>
-          {% endfor %}
-        </dd>
-        <dt>平易化された文章</dt>
-        <dd>
-          {% for word in sentence_info.new_tokens %}
-          <span class="{{ word.status }}">{{ word.token }}</span>
-          {% endfor %}
-        </dd>
-      </dl>
-    </div>
+    {% if sentence %}
+      <div class="row">
+        <dl>
+          <dt>元の文章</dt>
+          <dd>
+            {% for word in sentence_info.old_tokens %}
+            <span class="{{ word.status }}">{{ word.token }}</span>
+            {% endfor %}
+          </dd>
+          <dt>平易化された文章</dt>
+          <dd>
+            {% for word in sentence_info.new_tokens %}
+            <span class="{{ word.status }}">{{ word.token }}</span>
+            {% endfor %}
+          </dd>
+        </dl>
+      </div>
+    {% endif %}
   </div>
 </body>
 
