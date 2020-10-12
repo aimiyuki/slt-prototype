@@ -50,14 +50,14 @@
         <dl>
           <dt>元の文章</dt>
           <dd>
-            {% for word in sentence_info.old_tokens %}
-            <span class="{{ word.status }}">{{ word.token }}</span>
+            {% for word in old_sentence %}
+            <span class="{{ word.status.value }}">{{ word.surface }}</span>
             {% endfor %}
           </dd>
           <dt>平易化された文章</dt>
           <dd>
-            {% for word in sentence_info.new_tokens %}
-            <span class="{{ word.status }}">{{ word.token }}</span>
+            {% for word in new_sentence %}
+            <span class="{{ word.status.value }}">{{ word.surface }}</span>
             {% endfor %}
           </dd>
         </dl>
