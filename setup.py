@@ -9,13 +9,14 @@ setup(
         "spacy",
         "flask",
         "romkan",
+        "python-dotenv",
+        "sklearn",
     ],
     extras_require={
         "dev": [
             "pylint",
             "ipython",
             "black",
-            "python-dotenv",
         ],
         "deploy": [
             "gunicorn",
