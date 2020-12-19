@@ -8,6 +8,7 @@ import multiprocessing
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
+from functools import lru_cache
 from itertools import islice
 from typing import Dict, Iterable, List, OrderedDict, Tuple
 
@@ -51,11 +52,24 @@ class NGrams:
         result["grams"] = list(self.grams.items())
         return result
 
+    @classmethod
+    def from_dict(cls, raw):
+        grams = dict((tuple(k), v) for k, v in raw["grams"])
+        return cls(**{**raw, "grams": grams})
+
+    def __len__(self):
+        return len(self.grams)
+
+    def __getitem__(self, key):
+        return self.grams.get(key, 0)
+
 
 class NGramsContainer:
-    def __init__(self, max_n: int = 2):
+    def __init__(self, max_n: int = 2, ngrams: dict = None):
         self.max_n = max_n
-        self.ngrams = {i: NGrams(i) for i in range(1, max_n + 1)}
+        if ngrams is None:
+            ngrams = {i: NGrams(i) for i in range(1, max_n + 1)}
+        self.ngrams = ngrams
 
     def add_entries(self, tokens: List[str]):
         for i in range(1, self.max_n + 1):
@@ -73,6 +87,28 @@ class NGramsContainer:
 
     def to_dict(self):
         return {n: grams.to_dict() for n, grams in self.ngrams.items()}
+
+    @classmethod
+    def from_dict(cls, raw: dict):
+        max_n = max(map(int, raw))
+        ngrams = {int(k): NGrams.from_dict(v) for k, v in raw.items()}
+        return cls(max_n, ngrams)
+
+    @property
+    @lru_cache
+    def nlp(self):
+        return spacy.load("ja_core_news_sm", disable=["ner"])
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            key = tuple(str(v) for v in self.nlp(key))
+        n = len(key)
+        if n not in self.ngrams:
+            logging.warning(
+                "%s tokens but only up to %s-grams available", n, self.max_n
+            )
+            return 0
+        return self.ngrams[n][key]
 
 
 class NGramGenerator:
