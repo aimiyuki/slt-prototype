@@ -7,6 +7,7 @@ KANJI_RE = re.compile(
     "\uF900-\uFAFF\U00020000-\U0002EBEF]+"
 )
 HIRAGANA_RE = re.compile("[ぁ-ゟ]+")
+ONLY_HIRAGANA_RE = re.compile("^[ぁ-ゟ]+$")
 KATAKANA_RE = re.compile("[\u30A1-\u30FF]+")
 
 
@@ -16,6 +17,10 @@ def has_kanji(token: str) -> bool:
 
 def has_hiragana(token: str) -> bool:
     return HIRAGANA_RE.search(token) is not None
+
+
+def only_hiragana(token: str) -> bool:
+    return ONLY_HIRAGANA_RE.match(token) is not None
 
 
 def has_katakana(token: str) -> bool:

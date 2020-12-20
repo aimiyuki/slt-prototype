@@ -1,51 +1,64 @@
 <html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SLT: 日本語平易化システム</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      crossorigin="anonymous"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SLT: 日本語平易化システム</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-    crossorigin="anonymous">
-  <style>
-    html,
-    body {
-      height: 100%
-    }
+      .small-search-btn {
+        max-height: 40px;
+        padding: 0 0.5rem;
+      }
 
-    .small-search-btn {
-      max-height: 40px;
-      padding: 0 .5rem;
-    }
+      .added {
+        color: #32a852;
+      }
 
-    .added {
-      color: #32a852;
-    }
+      .removed {
+        color: #a83a32;
+      }
+    </style>
+  </head>
 
-    .removed {
-      color: #a83a32;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="container ml-3">
-    <div class="row mt-5">
-      <h2 class="mr-5">SLT: 日本語平易化システム</h2>
-    </div>
-    <div class="row">
-      <form class="col-9" action="/" method="GET">
-        <div class="row">
-          <div class="form-group col-10">
-            <input type="text" name="sentence" class="form-control" placeholder="文章"
-              {% if sentence %}value="{{ sentence }}" {% endif %}>
+  <body>
+    <div class="container ml-3">
+      <div class="row mt-5">
+        <h2 class="mr-5">SLT: 日本語平易化システム</h2>
+      </div>
+      <div class="row">
+        <form class="col-9" action="/" method="GET">
+          <div class="row">
+            <div class="form-group col-10">
+              <textarea
+                type="text"
+                name="sentence"
+                class="form-control"
+                placeholder="文章"
+                rows="5"
+              >
+{% if sentence %}{{ sentence }}{% endif %}</textarea
+              >
+            </div>
+            <button
+              type="submit"
+              class="btn btn-sm btn-secondary small-search-btn"
+            >
+              平易化する
+            </button>
           </div>
-          <button type="submit" class="btn btn-sm btn-secondary small-search-btn">平易化する</button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
 
-    {% if sentence %}
+      {% if sentence %}
       <div class="row">
         <dl>
           <dt>元の文章</dt>
@@ -62,8 +75,7 @@
           </dd>
         </dl>
       </div>
-    {% endif %}
-  </div>
-</body>
-
+      {% endif %}
+    </div>
+  </body>
 </html>

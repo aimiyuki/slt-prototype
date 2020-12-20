@@ -9,7 +9,7 @@ from gensim.models.keyedvectors import KeyedVectors
 
 
 CACHE_SIZE = 10_000
-DEFAULT_SIMILARITY_THRESHOLD = 0.3
+DEFAULT_SIMILARITY_THRESHOLD = 0.4
 
 
 thread_local = threading.local()

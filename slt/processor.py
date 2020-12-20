@@ -1,4 +1,5 @@
 import gzip
+import re
 import json
 from slt.ngram import NGramsContainer
 from typing import Dict, Tuple
@@ -6,7 +7,7 @@ import csv
 
 import spacy
 
-from slt import settings
+from slt import japanese, settings
 from slt.entities import Sentence, Word, Status
 from slt.synonyms import WordnetWithW2vThresholdExtractor, SynonymExtractor
 from slt.conjugation import Conjugator
@@ -50,7 +51,7 @@ class Processor:
         return new_word
 
     def compute_token(self, token):
-        if token.pos_ == "AUX":
+        if token.pos_ == "AUX" or japanese.only_hiragana(token.text):
             return token.text
         word_level = self.jlpt_words.get(token.lemma_, 1)
         synonyms = self.get_sorted_synonyms(token, max_word_level=word_level)
@@ -81,14 +82,15 @@ class Processor:
             if i in seen:
                 old_sentence.append(Word(token.text, status=Status.REMOVED))
                 continue
-            # print(token.text, token.lemma_, token.dep_, token.pos_, token.tag_)
+            print(token.text, token.lemma_, token.dep_, token.pos_, token.tag_)
             new_word_surface = self.compute_token(token)
+            if new_word_surface != token.text:
+                new_word_surface = self.adjust_token(token, new_word_surface)
             if new_word_surface == token.text:
                 new_word = Word(new_word_surface, status=Status.UNCHANGED)
                 old_sentence.append(Word(token.text, status=Status.UNCHANGED))
                 before, after = 0, 0
             else:
-                new_word_surface = self.adjust_token(token, new_word_surface)
                 new_word = Word(new_word_surface, status=Status.ADDED)
                 old_sentence.append(Word(token.text, status=Status.REMOVED))
                 before, after = self.get_count_to_replace(token, new_word_surface)
@@ -109,7 +111,7 @@ class Processor:
             after = len(self.get_verb_tokens(token)) - 1
         elif (
             token.pos_ == "ADJ"
-            and [t.text for t in token.rights][:1] == ["な"]
+            and [t.text for t in token.rights][:1] in [["な"], ["だ"]]
             and new_word_surface.endswith("い")
             or new_word_surface.endswith("かった")
         ):
@@ -151,7 +153,11 @@ class Processor:
             )
         nlp = spacy.load(japanese_model)
         with open(jlpt_words_path) as f:
-            jlpt_words = {row["word"]: int(row["level"]) for row in csv.DictReader(f)}
+            jlpt_words = {
+                w: int(row["level"])
+                for row in csv.DictReader(f)
+                for w in re.split(r"\s+|、", row["word"])
+            }
         with gzip.open(ngrams_path) as f:
             ngrams = NGramsContainer.from_dict(json.load(f))
         return cls(synonyms_extractor, nlp, jlpt_words, ngrams=ngrams)
