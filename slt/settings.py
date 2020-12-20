@@ -17,6 +17,10 @@ W2V_MODEL_PATH = path.expanduser(
 JAPANESE_MODEL = os.environ.get("JAPANESE_MODEL", "ja_core_news_sm")
 JLPT_WORDS_PATH = os.environ.get("JLPT_WORDS_PATH", "../data/jlpt-vocab.csv")
 
+NGRAMS_PATH = path.expanduser(
+    os.environ.get("NGRAMS_PATH", "~/.local/share/models/wiki-ja-ngrams.json.gz")
+)
+
 CONJUGATOR_DATA = path.join(PROJECT_ROOT, "data/conjo.csv")
 VERBS_PATH = path.join(PROJECT_ROOT, "data/verbs.csv")
 

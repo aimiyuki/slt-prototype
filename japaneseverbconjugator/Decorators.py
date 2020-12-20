@@ -55,7 +55,6 @@ def validateJapaneseVerbDecorator(func):
     @wraps(func)
     def wrapper(self, verb, *args):
         if len(verb) < 2:
-            print("here")
             raise Exception("Invalid Japanese Verb Length", len(verb), verb)
 
         if verb[-1:] not in [

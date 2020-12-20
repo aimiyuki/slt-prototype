@@ -1,3 +1,6 @@
+import gzip
+import json
+from slt.ngram import NGramsContainer
 from typing import Dict, Tuple
 import csv
 
@@ -9,13 +12,21 @@ from slt.synonyms import WordnetWithW2vThresholdExtractor, SynonymExtractor
 from slt.conjugation import Conjugator
 
 
+NGRAM_RATIO_THRESHOLD = 10
+
+
 class Processor:
     def __init__(
-        self, synonyms_extractor: SynonymExtractor, nlp, jlpt_words: Dict[str, int]
+        self,
+        synonyms_extractor: SynonymExtractor,
+        nlp,
+        jlpt_words: Dict[str, int],
+        ngrams: NGramsContainer,
     ):
         self.synonyms_extractor = synonyms_extractor
         self.nlp = nlp
         self.jlpt_words = jlpt_words
+        self.ngrams = ngrams
         self.conjugator = Conjugator()
 
     def get_sorted_synonyms(self, token, max_word_level=0):
@@ -34,15 +45,31 @@ class Processor:
             verb_tokens = self.get_verb_tokens(old_token)
             verb_text = "".join([t.text for t in verb_tokens])
             return self.conjugator.adjust_conjugation(
-                verb_text, old_token.lemma_, new_word
+                verb_text, [t.lemma_ for t in verb_tokens], new_word
             )
         return new_word
 
     def compute_token(self, token):
+        if token.pos_ == "AUX":
+            return token.text
         word_level = self.jlpt_words.get(token.lemma_, 1)
         synonyms = self.get_sorted_synonyms(token, max_word_level=word_level)
-        if synonyms:
-            return synonyms[0]
+
+        for candidate in synonyms:
+            if token.idx > 0 and token.pos_ in ["NOUN", "ADJ"]:
+                previous_token = token.nbor(-1)
+                current_ngram = self.ngrams[previous_token.text + token.text]
+                new_ngram = self.ngrams[previous_token.text + candidate]
+                if new_ngram == 0 or current_ngram / new_ngram > NGRAM_RATIO_THRESHOLD:
+                    continue
+            if token.idx < len(token.doc) and token.pos_ in ["NOUN", "ADJ"]:
+                next_token = token.nbor(1)
+                current_ngram = self.ngrams[token.text + next_token.text]
+                new_ngram = self.ngrams[candidate + next_token.text]
+                if new_ngram == 0 or current_ngram / new_ngram > NGRAM_RATIO_THRESHOLD:
+                    continue
+            return candidate
+
         return token.text
 
     def process_sentence(self, sentence) -> Tuple[Sentence, Sentence]:
@@ -59,24 +86,40 @@ class Processor:
             if new_word_surface == token.text:
                 new_word = Word(new_word_surface, status=Status.UNCHANGED)
                 old_sentence.append(Word(token.text, status=Status.UNCHANGED))
-                count_to_replace = 1
+                before, after = 0, 0
             else:
                 new_word_surface = self.adjust_token(token, new_word_surface)
                 new_word = Word(new_word_surface, status=Status.ADDED)
                 old_sentence.append(Word(token.text, status=Status.REMOVED))
-                count_to_replace = self.get_count_to_replace(token)
+                before, after = self.get_count_to_replace(token, new_word_surface)
 
-            for j in range(i, i + count_to_replace):
+            for j in range(i, i + after + 1):
                 seen.add(j)
+
+            if before > 0:
+                new_sentence = new_sentence[:-before]
 
             new_sentence.append(new_word)
 
         return new_sentence, old_sentence
 
-    def get_count_to_replace(self, token):
+    def get_count_to_replace(self, token, new_word_surface) -> Tuple[int, int]:
+        before, after = 0, 0
         if token.pos_ == "VERB":
-            return len(self.get_verb_tokens(token))
-        return 1
+            after = len(self.get_verb_tokens(token)) - 1
+        elif (
+            token.pos_ == "ADJ"
+            and [t.text for t in token.rights][:1] == ["な"]
+            and new_word_surface.endswith("い")
+            or new_word_surface.endswith("かった")
+        ):
+            after = 1
+
+        lefts = list(token.lefts)
+        if lefts and lefts[-1].pos_ == "INTJ" and lefts[-1].text in ["お", "ご"]:
+            before = 1
+
+        return (before, after)
 
     @staticmethod
     def get_verb_tokens(root):
@@ -95,6 +138,7 @@ class Processor:
         w2v_model_path=settings.W2V_MODEL_PATH,
         japanese_model=settings.JAPANESE_MODEL,
         jlpt_words_path=settings.JLPT_WORDS_PATH,
+        ngrams_path=settings.NGRAMS_PATH,
         w2v=None,
     ):
         if w2v:
@@ -108,7 +152,9 @@ class Processor:
         nlp = spacy.load(japanese_model)
         with open(jlpt_words_path) as f:
             jlpt_words = {row["word"]: int(row["level"]) for row in csv.DictReader(f)}
-        return cls(synonyms_extractor, nlp, jlpt_words)
+        with gzip.open(ngrams_path) as f:
+            ngrams = NGramsContainer.from_dict(json.load(f))
+        return cls(synonyms_extractor, nlp, jlpt_words, ngrams=ngrams)
 
 
 # parser = Parser.load()

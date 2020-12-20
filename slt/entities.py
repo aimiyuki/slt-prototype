@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
+from typing import List, Union, overload
 
 
 class Status(Enum):
@@ -27,3 +29,16 @@ class Sentence:
 
     def __iter__(self):
         return iter(self.words)
+
+    @overload
+    def __getitem__(self, key: slice) -> Sentence:
+        ...
+
+    @overload
+    def __getitem__(self, key: int) -> Word:
+        ...
+
+    def __getitem__(self, key: Union[int, slice]):
+        if isinstance(key, slice):
+            return Sentence(words=self.words[key])
+        return self.words[key]

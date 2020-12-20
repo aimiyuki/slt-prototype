@@ -2,6 +2,11 @@ from .EnumeratedTypes import Formality, Polarity, Tense, VerbClass
 
 KUDASAI = "ください"
 
+
+IRREGULAR_MAPPINGS = {
+    "行く": "う",
+}
+
 # IRREGULAR VERB ENDINGS
 SURU_ENDING = "する"
 KURU_ENDING = "くる"

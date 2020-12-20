@@ -99,9 +99,13 @@ class NGramsContainer:
     def nlp(self):
         return spacy.load("ja_core_news_sm", disable=["ner"])
 
-    def __getitem__(self, key):
+    def _normalize_key(self, key):
         if isinstance(key, str):
             key = tuple(str(v) for v in self.nlp(key))
+        return key
+
+    def __getitem__(self, key):
+        key = self._normalize_key(key)
         n = len(key)
         if n not in self.ngrams:
             logging.warning(
@@ -109,6 +113,13 @@ class NGramsContainer:
             )
             return 0
         return self.ngrams[n][key]
+
+    def probability(self, key):
+        key = self._normalize_key(key)
+        count = self[key]
+        if count > 0:
+            return count / self.ngrams[len(key)].total_count
+        return 0
 
 
 class NGramGenerator:

@@ -1,4 +1,5 @@
 import csv
+from typing import List
 
 from japaneseverbconjugator.JapaneseVerbFormGenerator import JapaneseVerbFormGenerator
 from japaneseverbconjugator.constants.EnumeratedTypes import (
@@ -8,7 +9,7 @@ from japaneseverbconjugator.constants.EnumeratedTypes import (
     VerbClass,
 )
 
-from slt import settings
+from slt import settings, japanese
 
 
 IRREGULAR_POS = set(["30", "34", "38", "42", "45", "47", "48", "52", "58"])
@@ -62,14 +63,24 @@ class Conjugator:
             "tense": int(conj["conj"]),
         }
 
-    def adjust_conjugation(self, source_verb: str, source_lemma: str, target_verb: str):
-        print(source_verb, source_lemma, target_verb)
+    def adjust_conjugation(
+        self, source_verb: str, source_lemmas: List[str], target_verb: str
+    ):
+        print(source_verb, source_lemmas, target_verb)
+        if not japanese.has_hiragana(target_verb) and "する" in source_lemmas:
+            # both verbs are noun+する, simply: append the same ending
+            return target_verb + source_verb.replace(source_lemmas[0], "")
         suffix = ""
-        if source_verb.endswith("ら") or source_verb.endswith("り"):
+
+        if source_verb.endswith("が"):
             suffix = source_verb[-1]
             source_verb = source_verb[:-1]
+
+        if source_verb.endswith("ら") or source_verb.endswith("り"):
+            suffix = source_verb[-1] + suffix
+            source_verb = source_verb[:-1]
         conjugated = source_verb
-        conj = self.detect_class(source_verb, source_lemma)
+        conj = self.detect_class(source_verb, source_lemmas[0])
         if not conj:
             return target_verb
         tense, formality, polarity = (
