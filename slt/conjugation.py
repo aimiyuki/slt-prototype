@@ -14,6 +14,8 @@ from slt import settings, japanese
 
 IRREGULAR_POS = set(["30", "34", "38", "42", "45", "47", "48", "52", "58"])
 
+SUFFIXES = ["べきだ", "が", "べしだ", "べき", "べし"]
+
 
 class VerbTense:
     NonPast = 1
@@ -70,11 +72,13 @@ class Conjugator:
         if not japanese.has_hiragana(target_verb) and "する" in source_lemmas:
             # both verbs are noun+する, simply: append the same ending
             return target_verb + source_verb.replace(source_lemmas[0], "")
+
         suffix = ""
 
-        if source_verb.endswith("が"):
-            suffix = source_verb[-1]
-            source_verb = source_verb[:-1]
+        for potential_suffix in SUFFIXES:
+            if source_verb.endswith(potential_suffix):
+                suffix = source_verb[-len(potential_suffix) :] + suffix
+                source_verb = source_verb[: len(potential_suffix)]
 
         if source_verb.endswith("ら") or source_verb.endswith("り"):
             suffix = source_verb[-1] + suffix

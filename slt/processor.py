@@ -57,17 +57,24 @@ class Processor:
         synonyms = self.get_sorted_synonyms(token, max_word_level=word_level)
 
         for candidate in synonyms:
-            if token.idx > 0 and token.pos_ in ["NOUN", "ADJ"]:
-                previous_token = token.nbor(-1)
+            before, after = self.get_count_to_replace(token, candidate)
+            if token.idx > before and token.pos_ in ["NOUN", "ADJ"]:
+                previous_token = token.nbor(-1 - before)
                 current_ngram = self.ngrams[previous_token.text + token.text]
                 new_ngram = self.ngrams[previous_token.text + candidate]
-                if new_ngram == 0 or current_ngram / new_ngram > NGRAM_RATIO_THRESHOLD:
+                if (
+                    (new_ngram == 0 and current_ngram > 0)
+                    or new_ngram > 0
+                    and current_ngram / new_ngram > NGRAM_RATIO_THRESHOLD
+                ):
                     continue
-            if token.idx < len(token.doc) and token.pos_ in ["NOUN", "ADJ"]:
-                next_token = token.nbor(1)
+            if token.idx + after < len(token.doc) and token.pos_ in ["NOUN", "ADJ"]:
+                next_token = token.nbor(1 + after)
                 current_ngram = self.ngrams[token.text + next_token.text]
                 new_ngram = self.ngrams[candidate + next_token.text]
-                if new_ngram == 0 or current_ngram / new_ngram > NGRAM_RATIO_THRESHOLD:
+                if (new_ngram == 0 and current_ngram > 0) or (
+                    new_ngram > 0 and current_ngram / new_ngram > NGRAM_RATIO_THRESHOLD
+                ):
                     continue
             return candidate
 
