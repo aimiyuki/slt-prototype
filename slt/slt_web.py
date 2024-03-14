@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, render_template, request
+from flask_cors import cross_origin
 from gensim.models.keyedvectors import KeyedVectors
 
 from slt import settings
@@ -27,3 +28,14 @@ def index():
         result = processor.process_sentence(sentence)
         kwargs["new_sentence"], kwargs["old_sentence"] = result
     return render_template("index.html", **kwargs)
+
+
+@app.route("/translate", methods=["POST"])
+@cross_origin()
+def translate():
+    sentence = request.get_json()["sentence"]
+    result = processor.process_sentence(sentence)
+    new_sentence, old_sentence = result
+    return jsonify(
+        {"new_sentence": new_sentence.as_dict(), "old_sentence": old_sentence.as_dict()}
+    )

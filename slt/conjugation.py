@@ -68,7 +68,6 @@ class Conjugator:
     def adjust_conjugation(
         self, source_verb: str, source_lemmas: List[str], target_verb: str
     ):
-        print(source_verb, source_lemmas, target_verb)
         if not japanese.has_hiragana(target_verb) and "する" in source_lemmas:
             # both verbs are noun+する, simply: append the same ending
             return target_verb + source_verb.replace(source_lemmas[0], "")

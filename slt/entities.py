@@ -16,6 +16,9 @@ class Word:
     surface: str
     status: Status = Status.UNCHANGED
 
+    def as_dict(self):
+        return {"surface": self.surface, "status": self.status.value}
+
 
 @dataclass()
 class Sentence:
@@ -31,14 +34,15 @@ class Sentence:
         return iter(self.words)
 
     @overload
-    def __getitem__(self, key: slice) -> Sentence:
-        ...
+    def __getitem__(self, key: slice) -> Sentence: ...
 
     @overload
-    def __getitem__(self, key: int) -> Word:
-        ...
+    def __getitem__(self, key: int) -> Word: ...
 
     def __getitem__(self, key: Union[int, slice]):
         if isinstance(key, slice):
             return Sentence(words=self.words[key])
         return self.words[key]
+
+    def as_dict(self):
+        return [word.as_dict() for word in self.words]

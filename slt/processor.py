@@ -89,7 +89,6 @@ class Processor:
             if i in seen:
                 old_sentence.append(Word(token.text, status=Status.REMOVED))
                 continue
-            print(token.text, token.lemma_, token.dep_, token.pos_, token.tag_)
             new_word_surface = self.compute_token(token)
             if new_word_surface != token.text:
                 new_word_surface = self.adjust_token(token, new_word_surface)

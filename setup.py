@@ -11,6 +11,7 @@ setup(
         "romkan",
         "python-dotenv",
         "sklearn",
+        "flask-cors",
     ],
     extras_require={
         "dev": [
