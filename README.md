@@ -6,7 +6,17 @@ This is a prototype built for my bachelor thesis: [Same Language Translator
 It takes as input a complex Japanese sentence and transforms it in a simpler one.
 A demo is available at the following URL:
 
-https://slt.aimiyuki.me/
+https://slt.miyuki.ai/
+
+and the API is exposed at:
+
+https://slt.aimiyuki.me/translate
+
+and can be used as follows:
+```
+```bash
+curl -H "Content-Type: application/json" -d '{"sentence": "本日は友人とお食事した後に、大学に参りました"}' https://slt.aimiyuki.me/translate
+```
 
 ## Setup
 
